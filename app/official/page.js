@@ -1,4 +1,4 @@
-import { RoadmapApp } from '@/components/roadmap-app';
+import { ResourceIndex } from '@/components/resource-index';
 
-export const metadata={title:'官方学习路线 · 造世界创作地图'};
-export default function Official(){return <RoadmapApp view="official"/>}
+export const metadata={title:'资料索引 · 造世界创作地图'};
+export default function Official(){return <ResourceIndex/>}
