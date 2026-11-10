@@ -1,6 +1,6 @@
 import { officialCatalog } from './official-catalog.js';
 import { masterclassSections } from './masterclass-sections.js';
-import { courses } from './data.js';
+import { courses, routes, masterclasses } from './data.js';
 
 // 标签服务于关键词召回，不代表课程作者的官方分类。
 const peerTags={
@@ -53,6 +53,30 @@ const docTags={
  fmgy9043:['地形','地图','生成'], '6inqqa8b':['天气','光照','雾'], '06pvv22f':['水体','湖泊','河流'], '5v3rja56':['资产','模型','摆放'],ag16jzrq:['出生点','物理','碰撞','重力'],m3of8c4u:['容量','格式','面数','资源'],
  '9ogz06ef':['交互','模型','组合','玩法'], '7obzr0g6':['跑酷','关卡','玩法'],h56wvtfa:['发布','审核','自查'],cg24rtmr:['审核','合规','版权'],vsg6b86p:['星光','消耗','规则'], '00wq0ke2':['常见问题','FAQ','故障','排查']
 };
+// 复用页面中已有的课程简介和路线步骤，不将同一文档的简介套到每个小节。
+const peerDescriptions = {
+ zhao:'从创建项目开始，学习编辑器的基本操作、场景搭建和发布。',
+ qin:'通过小王子游戏案例，参考场景构思、地图和资产摆放。',
+ lu:'参考场景布局、模型、碰撞和灯光的创作技巧。',
+ guo:'使用造世界 Skill 梳理创作想法、玩法需求与方案。',
+ lu2:'使用氛围感贴图和材质丰富场景的视觉表现。',
+ zhang:'借助外部 AI 编写和调整可玩的交互功能与脚本。',
+ huang:'参考团队创作中的内容组织、任务拆分和流程编排。',
+ chen:'探索使用 Computer Use 自动操作电脑进行场景创作。',
+ hyz:'使用 Skill 辅助复刻校园空间和场景。',
+ xu:'使用 Unity 和 Skill 辅助创建造世界项目。',
+ html:'先用 HTML 制作游戏原型，再通过 Unity SDK 还原体验。',
+ chu:'参考从场景布局到互动玩法的制作与迭代。',
+ deng:'从玩法设计、试玩和调整入手，完成可玩的世界。',
+ li:'通过完整作品参考游戏玩法与创作过程。',
+ h:'参考《火陨王座》的玩法与世界创作思路。'
+};
+const descriptions = Object.fromEntries(Object.entries(peerDescriptions).map(([id,description])=>[id,new Set([description])]));
+for (const route of routes) for (const [, description, ids] of route.steps) for (const id of ids) {
+ (descriptions[id] ||= new Set()).add(description);
+}
+for (const item of masterclasses) (descriptions[item.id] ||= new Set()).add(item.description);
+const descriptionFor = id => [...(descriptions[id] || [])].join(' ');
 export function makeSearchIndex(){
  const out=[];
  for(const group of officialCatalog) for(const doc of group.children){
@@ -61,9 +85,9 @@ export function makeSearchIndex(){
   for(const section of doc.children){out.push({id:`section:${id}:${new URL(section.url).hash}`,title:section.title,parent:doc.title,source:'官方教程',url:section.url,scope:'指定小节',tags:withConcepts([],section.title)});}
  }
  for(const [id,tags] of Object.entries(peerTags)){
-  const c=courses[id];if(!c)continue;out.push({id:`peer:${id}`,title:c[1],parent:c[0],source:'朋辈导师',url:c[2],scope:'课程资料',tags:withConcepts(tags,c[1])});
+  const c=courses[id];if(!c)continue;out.push({id:`peer:${id}`,title:c[1],parent:c[0],source:'朋辈导师',url:c[2],scope:'课程资料',description:descriptionFor(id),tags:withConcepts(tags,c[1])});
  }
- for(const id of ['pirate','racing','colors']){const c=courses[id];out.push({id:`master:${id}`,title:c[1],parent:'完整作品案例',source:'官方大师课',url:c[2],scope:'整篇',tags:withConcepts([],c[1])});}
+ for(const id of ['pirate','racing','colors']){const c=courses[id];out.push({id:`master:${id}`,title:c[1],parent:'完整作品案例',source:'官方大师课',url:c[2],scope:'整篇',description:descriptionFor(id),tags:withConcepts([],c[1])});}
  for(const id of ['tips','component'])for(const section of masterclassSections[id].filter(x=>x.level===1||(id==='component'&&x.level>=3))){
   out.push({id:`master-section:${section.id}`,title:section.title,parent:courses[id][1],source:'官方大师课',url:section.url,scope:'指定小节',tags:withConcepts(section.topics,section.title)});
  }
@@ -77,10 +101,11 @@ export function searchDocuments(query,limit=8){
  const expanded=concepts.filter(group=>group.some(word=>{const n=normalise(word);return n.length>=2&&q.includes(n)})).flat();
  const bigrams=q.length>=4?[...new Set(Array.from({length:q.length-1},(_,i)=>q.slice(i,i+2)).filter(x=>!ignored.has(x)))]:[];
  return searchIndex.map(entry=>{
-  const title=normalise(entry.title),tags=entry.tags.map(normalise);let score=0;
+  const title=normalise(entry.title),description=normalise(entry.description||''),tags=entry.tags.map(normalise);let score=0;
   if(title.includes(q))score+=100;else if(q.includes(title)&&title.length>=3)score+=55;
+  if(q.length>=2&&description.includes(q))score+=30;
 
-  for(const part of pieces){if(part.length>=2&&title.includes(part))score+=20;if(part.length>=2&&tags.some(t=>t===part))score+=22;}
+  for(const part of pieces){if(part.length>=2&&title.includes(part))score+=20;if(part.length>=2&&part!==q&&description.includes(part))score+=10;if(part.length>=2&&tags.some(t=>t===part))score+=22;}
   const aliasMatches=expanded.filter(word=>tags.includes(normalise(word)));if(aliasMatches.length)score+=Math.min(24,aliasMatches.length*4);
   const hits=bigrams.filter(part=>title.includes(part));if(hits.length>=2&&hits.length/Math.max(1,bigrams.length)>=.3)score+=Math.min(24,hits.length*5);
   return {...entry,score};

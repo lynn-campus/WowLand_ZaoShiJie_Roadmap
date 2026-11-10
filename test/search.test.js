@@ -7,3 +7,4 @@ test('用标签查找朋辈课程',()=>{assert.ok(searchDocuments('校园复刻'
 test('作品案例整篇、FAQ 小节分别标记',()=>{assert.equal(searchIndex.find(x=>x.id==='master:pirate').scope,'整篇');assert.equal(searchIndex.find(x=>x.title==='Q1：与AI对话的话术Tips').scope,'指定小节')});
 test('空查询和没有匹配时不返回全部资料',()=>{assert.deepEqual(searchDocuments(''),[]);assert.deepEqual(searchDocuments('zzzzzzzz'),[])});
 test('具体问题不被宽泛主题和相邻小节淹没',()=>{const matches=searchDocuments('容量满了');assert.equal(matches[0].title,'Q4. 世界容量满了怎么办？');assert.ok(!matches.some(x=>x.title.includes('顶点数与面数')));assert.ok(matches.length<=8)});
+test('可按课程简介检索，且具体问题保持精确',()=>{assert.ok(searchDocuments('驾驶体验').some(x=>x.id==='master:racing'));assert.ok(searchDocuments('任务拆分').some(x=>x.id==='peer:huang'));assert.equal(searchDocuments('容量满了')[0].title,'Q4. 世界容量满了怎么办？')});
