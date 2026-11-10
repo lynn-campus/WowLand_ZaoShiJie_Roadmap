@@ -21,7 +21,9 @@ const peerTags={
  h:['案例','游戏','玩法','火山','组件']
 };
 const concepts=[
- ['容量','超限','超出','内存','太大','资源过多','面数','卡顿','性能'],
+ ['容量','超限','超出','资源过多'],
+ ['面数','顶点数'],
+ ['卡顿','性能'],
  ['保存','存档','丢失','找回','备份'],
  ['发布','上线','上传','审核','提审','提交','驳回'],
  ['协作','合作','组队','团队','多人','交接'],
@@ -69,18 +71,18 @@ export function makeSearchIndex(){
 }
 export const searchIndex=makeSearchIndex();
 const ignored=new Set(['怎么','如何','什么','可以','问题','哪里','一下','为什么','怎样','一个','的']);
-export function searchDocuments(query,limit=12){
+export function searchDocuments(query,limit=8){
  const q=normalise(query);if(!q)return [];
  const pieces=[...new Set(query.toLowerCase().normalize('NFKC').split(/[\s\p{P}\p{S}]+/u).filter(Boolean).map(normalise))];
  const expanded=concepts.filter(group=>group.some(word=>{const n=normalise(word);return n.length>=2&&q.includes(n)})).flat();
  const bigrams=q.length>=4?[...new Set(Array.from({length:q.length-1},(_,i)=>q.slice(i,i+2)).filter(x=>!ignored.has(x)))]:[];
  return searchIndex.map(entry=>{
-  const title=normalise(entry.title),parent=normalise(entry.parent),tags=entry.tags.map(normalise);let score=0;
+  const title=normalise(entry.title),tags=entry.tags.map(normalise);let score=0;
   if(title.includes(q))score+=100;else if(q.includes(title)&&title.length>=3)score+=55;
-  if(parent.includes(q))score+=15;
+
   for(const part of pieces){if(part.length>=2&&title.includes(part))score+=20;if(part.length>=2&&tags.some(t=>t===part))score+=22;}
   const aliasMatches=expanded.filter(word=>tags.includes(normalise(word)));if(aliasMatches.length)score+=Math.min(24,aliasMatches.length*4);
   const hits=bigrams.filter(part=>title.includes(part));if(hits.length>=2&&hits.length/Math.max(1,bigrams.length)>=.3)score+=Math.min(24,hits.length*5);
   return {...entry,score};
- }).filter(entry=>entry.score>0).sort((a,b)=>b.score-a.score||a.title.localeCompare(b.title,'zh-CN')).slice(0,limit);
+ }).filter(entry=>entry.score>0).sort((a,b)=>b.score-a.score||a.title.localeCompare(b.title,'zh-CN')).filter((entry,_,all)=>entry.score>=Math.max(8,all[0].score*.3)).slice(0,limit);
 }
