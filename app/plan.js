@@ -1,15 +1,16 @@
 import { recommend, routes } from './data.js';
+import { helpSection } from './official-reading.js';
 
 export function buildPlan(a) {
  const ids = recommend(a), p = a.proficiency, tried = a.experience, entries = [];
  const useCli = ids.includes('official') && a.officialMethod?.[0] === 'cli';
- const add = (title,desc,links=[],tag='学习',lane='shared',phase='prepare') => entries.push({title,desc,links,tag,lane,phase,kind:['可选策划','可选参考','官方大师课'].includes(tag)?'optional':'core'});
+ const add = (title,desc,links=[],tag='学习',lane='shared',phase='prepare') => entries.push({title,desc,links,tag,lane,phase,kind:['可选策划','可选参考','官方大师课','按需补充'].includes(tag)?'optional':'core'});
  const level = key => p.includes(key) ? 'independent' : tried.includes(key) ? 'tried' : 'new';
  if (a.idea.length && a.idea[0] !== 'ready') {
    if (level('design') === 'independent') add('复核你的世界方案','你已有策划经验，可用一页方案检查核心体验与范围；郭子睿的 Skill 可作为可选的追问工具。', ['guo'], '可选策划');
    else add(level('design') === 'tried' ? '完善已有的策划想法' : '先把想法说清楚', '确定体验目标、参与者的操作和第一版范围，写下一页方案。'+(level('agent')==='new'?'可先用纸笔或普通 AI 对话，熟悉 Agent 后再尝试 Skill。':'可用郭子睿的 Skill 辅助提问和拆解。'), ['guo'], '策划');
  } else if (a.idea[0] === 'ready' && level('design') !== 'new') add('可选：复核已有方案','你可以直接制作；也可以用郭子睿的 Skill 检查范围和遗漏。',['guo'],'可选策划');
- if (ids.includes('official') && level('editor')!=='independent') add(level('editor')==='tried'?'复习编辑器基础':'认识造世界编辑器',level('editor')==='tried'?'练习独立创建、保存并预览场景，巩固基本操作。':'创建、保存并预览一个小场景，找到基本操作区域。',['official','zhao','tips'],'基础');
+ if (ids.includes('official') && level('editor')!=='independent') add(level('editor')==='tried'?'复习编辑器基础':'认识造世界编辑器',level('editor')==='tried'?'练习独立创建、保存并预览场景，巩固基本操作。':'创建、保存并预览一个小场景，找到基本操作区域。',[helpSection('sfbm08fj','如何开始？'),'help:l1t696xj','help:arvm6ee6','zhao'],'基础');
  if ((ids.includes('html') || useCli) && level('ai')!=='independent') add(level('ai')==='tried'?'练习细化 AI 需求':'认识 AI 协作','给出目标、背景和限制；检查结果，每次只调整一个问题。',[],'基础');
  if (useCli && level('agent')!=='independent') add(level('agent')==='tried'?'巩固 AI 助手与工具操作':'先熟悉 AI 助手与工具操作',level('agent')==='tried'?'独立完成一次小任务并核对结果，再尝试 CLI。':'练习描述任务、检查结果和操作文件；完成后再尝试 CLI。',[],'基础','official');
  if (a.context?.includes('team')) add('先约定分工和资产交接','官方指南建议一人负责主地图，其余成员制作资产；导出 GLB 交给主地图负责人导入，按团队实际情况安排。',['collaboration'],'团队协作');
@@ -37,6 +38,13 @@ export function buildPlan(a) {
   if(level('design')==='independent') add('验证已有玩法设计','用试玩检查目标、操作、反馈和结束条件，不必重复学习基础概念。',['component','deng'],'专项');
   else add(level('design')==='tried'?'完善玩家引导与反馈':'补上玩家目标与互动反馈','明确玩家的操作、反馈和结束条件，先完成一个短闭环。',['component','chu','deng'],'专项');
  }
+ if(ids.includes('official')) {
+  add('向 AI 描述任务','遇到提示词或交互表达问题时，只看对应技巧。',['tips'],'按需补充');
+  add('地形、环境与水体','按实际需求查看生成流程、光照和水体的对应章节。',[helpSection('fmgy9043','1.AI生成地图'),helpSection('6inqqa8b','快速上手'),helpSection('06pvv22f','2.3.1 湖泊')],'按需补充');
+  add('模型、物理与资源限制','查阅资产生成、出生点与容量检查，遇到具体问题再深入。',[helpSection('5v3rja56','模块一：AI 提示词生成模型'),helpSection('ag16jzrq','模块一：用户出生点'),helpSection('m3of8c4u','模块一：资源格式与基础限制')],'按需补充');
+  add('制作互动与玩法','按需要学习组合资产玩法，或完整阅读跑酷关卡案例。',[helpSection('9ogz06ef','三、MIX：把资产组合成复杂玩法'),'help:7obzr0g6'],'按需补充');
+  add('星光与故障排查','了解资源消耗；遇到相应问题时只查看相关 FAQ。',[helpSection('vsg6b86p','三、星光消耗规则'),helpSection('00wq0ke2','Q4. 世界容量满了怎么办？'),helpSection('00wq0ke2','Q2. Agent 模式是什么？和模型生成有什么区别？')],'按需补充');
+ }
  if(a.goal.some(goal=>['space','campus'].includes(goal))) add('参考场景与玩法结合','从主题出发组织场景，用互动把空间串起来。',['pirate'],'官方大师课');
  if(a.goal.some(goal=>['game','social'].includes(goal))) add('拆解完整玩法案例','按兴趣参考驾驶计时或色彩收集玩法，观察规则与反馈如何实现。',['racing','colors'],'官方大师课');
  if(a.goal.includes('campus')) add('让地点容易辨认','从入口、地标和行走路线开始，先做好一个校园角落。',['hyz'],'专项');
@@ -52,7 +60,8 @@ export function buildPlan(a) {
   const descriptions = selectedAbilities.map(([key,label])=>`${label}（${level(key)==='independent'?'可作为工具或选修参考':'可按需巩固'}）`);
   add('结合已有经验，按需查阅','这些不是必修课：'+descriptions.join('、')+'。策划 Skill 只用于方案梳理，已完成方案可跳过。', [...new Set(selectedAbilities.map(([, , link])=>link))], '可选参考');
  }
- add('试玩、修正并保存','从玩家视角走一遍，检查引导、互动、保存和重开，再分享给别人体验。',['optimization','deng'],'验收','shared','finish');
+ add('试玩、修正并保存','从玩家视角走一遍，检查引导、互动、保存和重开，再分享给别人体验。',[helpSection('gcrhu9lj','一、先保存当前创作进度'),helpSection('gcrhu9lj','二、用手机做真机预览'),helpSection('gcrhu9lj','三、在编辑器里做本地调试'),'optimization','deng'],'验收','shared','finish');
+ add('发布前自查','准备公开发布时，完整核对发布自查与内容审核要求。',['help:h56wvtfa','help:cg24rtmr'],'按需补充','shared','finish');
  if(a.context?.includes('contest')) add('准备活动提交','核对当前活动要求；该官方指南提示提交表单时同步发起上线审批，并使用开发版本二维码。',['submission'],'活动提交','shared','finish');
  return {ids,entries};
 }

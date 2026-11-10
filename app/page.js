@@ -28,12 +28,18 @@ function ParallelPlan({plan}) {
  for(const entry of plan.entries.filter(e=>e.kind==='optional')){
   let target;
   if(entry.tag==='可选策划') target=ordered.find(e=>e.tag==='策划');
-  if(entry.links.includes('pirate')) target=ordered.find(e=>e.title.includes('场景')&&e.lane!=='shared');
+  if(entry.phase==='finish') target=ordered.find(e=>e.phase==='finish');
+  if(entry.title==='向 AI 描述任务') target=ordered.find(e=>e.title.includes('AI')||e.title.includes('任务'));
+  if(entry.title==='地形、环境与水体'||entry.title==='模型、物理与资源限制') target=ordered.find(e=>e.title.includes('场景')&&e.lane!=='shared');
+  if(entry.title==='制作互动与玩法') target=ordered.find(e=>e.title.includes('互动')||e.title.includes('玩法'));
+  if(entry.title==='星光与故障排查') target=ordered.find(e=>e.title.includes('编辑器'));
+
+  if(entry.links.includes('pirate')) target=ordered.find(e=>e.title.includes('场景')&&e.lane!=='shared')||ordered.find(e=>e.title==='用 SDK 还原'||e.title==='创建最小工程');
   if(entry.links.includes('racing')) target=ordered.find(e=>e.title.includes('互动')||e.title.includes('玩法'));
   target ||= ordered.find(e=>e.phase!=='finish')||ordered[0];
   if(target) attached.set(target,[...(attached.get(target)||[]),entry]);
  }
- return <div className="parallel-plan"><p className="parallel-note">一条主工具路线；选修从对应任务分出，不影响主线。</p>{groups.map(group=><section className="lane" key={group.id}><div className="lane-header"><Badge variant="secondary">{group.name}</Badge><span>{group.id==='shared'?'共同准备':group.id==='finish'?'完成后回到这里':'当前选择的主路线'}</span></div><div className="lane-steps">{group.items.map((entry,i)=><div className="branch-row" key={entry.title+i}><div className="main-node"><span className="plan-number">{String(i+1).padStart(2,'0')}</span><div><div className="plan-tag">{entry.tag} · 建议必修</div><h4>{entry.title}</h4><p>{entry.desc}</p><CourseLinks links={entry.links}/></div></div>{attached.has(entry)&&<div className="elective-branch"><div className="branch-label"><GitBranch aria-hidden="true"/>按需选修</div>{attached.get(entry).map((extra,j)=><div className="elective-node" key={j}><h4>{extra.title}</h4><p>{extra.desc}</p><CourseLinks links={extra.links}/></div>)}</div>}</div>)}</div></section>)}</div>;
+ return <div className="parallel-plan"><p className="parallel-note">一条主工具路线；选修从对应任务分出，不影响主线。</p>{groups.map(group=><section className="lane" key={group.id}><div className="lane-header"><Badge variant="secondary">{group.name}</Badge><span>{group.id==='shared'?'共同准备':group.id==='finish'?'完成后回到这里':'当前选择的主路线'}</span></div><div className="lane-steps">{group.items.map((entry,i)=><div className="branch-row" key={entry.title+i}><div className="main-node"><span className="plan-number">{String(i+1).padStart(2,'0')}</span><div><div className="plan-tag">{entry.tag} · 建议必修</div><h4>{entry.title}</h4><p>{entry.desc}</p><CourseLinks links={entry.links} context={entry.title+entry.desc}/></div></div>{attached.has(entry)&&<div className="elective-branch"><div className="branch-label"><GitBranch aria-hidden="true"/>按需选修</div>{attached.get(entry).map((extra,j)=><div className="elective-node" key={j}><h4>{extra.title}</h4><p>{extra.desc}</p><CourseLinks links={extra.links} context={extra.title+extra.desc}/></div>)}</div>}</div>)}</div></section>)}</div>;
 }
 export default function Home(){
  const [step,setStep]=useState(0),[answers,setAnswers]=useState(empty),[assessed,setAssessed]=useState([]),[finished,setFinished]=useState(false),[open,setOpen]=useState(null),[error,setError]=useState(false),[storageReady,setStorageReady]=useState(false),[storageError,setStorageError]=useState(false);
