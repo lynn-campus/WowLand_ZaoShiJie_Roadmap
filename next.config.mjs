@@ -1,2 +1,2 @@
-const nextConfig = { output: 'export' };
+const nextConfig = { output: 'export', trailingSlash: true };
 export default nextConfig;
