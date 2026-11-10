@@ -40,3 +40,10 @@ html{scroll-behavior:smooth}.roadmap-shell{display:grid;grid-template-columns:20
  .roadmap-heading{align-items:flex-start}.roadmap-heading>[data-slot=badge]{flex:none}
  .main-node-inner{padding:15px}.branch-row{min-width:0}
 }
+@media(min-width:768px){
+ .floating-quiz>.quiz-card{display:flex;flex-direction:column;overflow:hidden;gap:0}
+ .floating-quiz .quiz-card>[data-slot=card-header]{flex:none;padding-top:20px;padding-bottom:14px}
+ .floating-quiz .quiz-card>[data-slot=card-content]{min-height:0;overflow-y:auto;overscroll-behavior:contain;padding-top:4px;padding-bottom:14px}
+ .floating-quiz .quiz-card>[data-slot=card-footer]{flex:none;border-top:1px solid var(--border);padding-top:12px;padding-bottom:12px;background:var(--card)}
+}
+@media(min-width:768px){.roadmap-sidebar .sidebar-card{background:var(--card);border:1px solid var(--border);box-shadow:0 12px 45px #2839291c}}
